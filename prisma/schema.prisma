@@ -1,0 +1,118 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Barberia {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  usuarios  Usuario[]
+  servicios Servicio[]
+  clientes  Cliente[]
+  cortes    Corte[]
+  turnos    Turno[]
+  cajas     Caja[]
+  createdAt DateTime  @default(now())
+}
+
+model Usuario {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  email       String    @unique
+  password    String
+  rol         Rol       // ADMIN | EMPLEADO
+  barberiaId  Int
+  barberia    Barberia  @relation(fields: [barberiaId], references: [id])
+  cortes      Corte[]
+  acciones    Auditoria[]
+  createdAt   DateTime  @default(now())
+}
+
+enum Rol {
+  ADMIN
+  EMPLEADO
+}
+
+model Cliente {
+  id         Int       @id @default(autoincrement())
+  nombre     String
+  telefono   String?
+  barberiaId Int
+  barberia   Barberia  @relation(fields: [barberiaId], references: [id])
+  cortes     Corte[]
+  turnos     Turno[]   // ← relación inversa agregada
+  createdAt  DateTime  @default(now())
+}
+
+model Servicio {
+  id         Int       @id @default(autoincrement())
+  nombre     String
+  precio     Float
+  barberiaId Int
+  barberia   Barberia  @relation(fields: [barberiaId], references: [id])
+  cortes     Corte[]
+  turnos     Turno[]   // ← relación inversa agregada
+}
+
+
+model Corte {
+  id          Int       @id @default(autoincrement())
+  fecha       DateTime  @default(now())
+  monto       Float
+  formaPago   FormaPago
+  clienteId   Int
+  servicioId  Int
+  empleadoId  Int
+  barberiaId  Int
+
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  servicio    Servicio  @relation(fields: [servicioId], references: [id])
+  empleado    Usuario   @relation(fields: [empleadoId], references: [id])
+  barberia    Barberia  @relation(fields: [barberiaId], references: [id])
+}
+
+enum FormaPago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+  OTRO
+}
+
+model Caja {
+  id         Int       @id @default(autoincrement())
+  fecha      DateTime  @default(now())
+  total      Float
+  efectivo   Float
+  transferencia Float
+  tarjeta    Float
+  otro       Float
+  barberiaId Int
+  barberia   Barberia  @relation(fields: [barberiaId], references: [id])
+}
+
+model Turno {
+  id         Int       @id @default(autoincrement())
+  fecha      DateTime
+  hora       String
+  clienteId  Int
+  servicioId Int
+  barberiaId Int
+
+  cliente    Cliente   @relation(fields: [clienteId], references: [id])
+  servicio   Servicio  @relation(fields: [servicioId], references: [id])
+  barberia   Barberia  @relation(fields: [barberiaId], references: [id])
+}
+
+model Auditoria {
+  id         Int       @id @default(autoincrement())
+  accion     String
+  fecha      DateTime  @default(now())
+  usuarioId  Int
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id])
+}
