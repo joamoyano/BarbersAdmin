@@ -71,3 +71,12 @@ export const obtenerPerfil = async (req, res) => {
     res.status(500).json({ error: "Error al obtener perfil" });
   }
 };
+
+export const obtenerUsuarios = async (req, res) => {
+  try {
+    const usuarios = await prisma.usuario.findMany();
+    res.json(usuarios);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuarios" });
+  }
+};
